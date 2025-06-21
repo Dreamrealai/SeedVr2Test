@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Upscaler</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Video Upscaler</h1>
+        <p>Upload a video file to upscale it using our Runpod-powered service.</p>
+
+        <input type="file" id="videoFile" accept="video/*">
+        <button id="uploadButton">Upload and Process</button>
+
+        <div id="status">
+            <p>Status: <span id="statusMessage">Idle</span></p>
+        </div>
+
+        <div id="result" style="display: none;">
+            <h2>Processed Video</h2>
+            <a id="downloadLink" href="#" download="upscaled_video.mp4">Download Upscaled Video</a>
+            <video id="videoPlayer" controls width="640" style="display: none;"></video>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
