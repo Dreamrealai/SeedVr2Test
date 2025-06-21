@@ -4,6 +4,9 @@
 echo "🚀 Starting SeedVR2 Easy Installation..."
 echo "======================================"
 
+# Make sure we're in the right directory
+cd /workspace 2>/dev/null || true
+
 # Install dependencies
 echo "📦 Installing dependencies (this takes 2-3 minutes)..."
 pip install -q torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
