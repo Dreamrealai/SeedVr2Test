@@ -1,12 +1,12 @@
 # SeedVR2 RunPod GUI Implementation Plan
 
 ## Project Overview
-Build a web-based GUI that allows users to upload videos and run SeedVR2 (3B model) on RunPod with one-click functionality.
+Build a web-based GUI that allows users to upload videos and run SeedVR2 (7B model) on RunPod with one-click functionality.
 
 ## 1. Understanding SeedVR2 Requirements
 
 ### Model Specifications
-- **Model**: ByteDance-Seed/SeedVR2-3B
+- **Model**: ByteDance-Seed/SeedVR2-7B
 - **Purpose**: One-step video restoration via diffusion adversarial post-training
 - **License**: Apache 2.0
 

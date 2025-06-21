@@ -1,11 +1,11 @@
 # SeedVR2 RunPod GUI
 
-A web-based interface for running SeedVR2-3B video restoration on RunPod with one-click functionality.
+A web-based interface for running SeedVR2-7B video restoration on RunPod with one-click functionality.
 
 ## Features
 
 - 🎥 Easy video upload with drag-and-drop
-- ⚡ One-click video restoration using SeedVR2-3B model
+- ⚡ One-click video restoration using SeedVR2-7B model
 - 🖥️ RunPod integration for GPU processing
 - 📊 Real-time processing status
 - 🎛️ Adjustable parameters (resolution, seed)
@@ -16,7 +16,7 @@ A web-based interface for running SeedVR2-3B video restoration on RunPod with on
 - **Frontend**: React + TypeScript
 - **Backend**: FastAPI + Python
 - **Processing**: RunPod Serverless (H100 GPUs)
-- **Model**: ByteDance-Seed/SeedVR2-3B
+- **Model**: ByteDance-Seed/SeedVR2-7B
 
 ## Quick Start
 

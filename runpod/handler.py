@@ -12,8 +12,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Model paths
-MODEL_PATH = "/models/seedvr2-3b"
-INFERENCE_SCRIPT = "/app/SeedVR/projects/inference_seedvr2_3b.py"
+MODEL_PATH = "/models/seedvr2-7b"
+INFERENCE_SCRIPT = "/app/SeedVR/projects/inference_seedvr2_7b.py"
 
 def download_video(url: str, output_path: str) -> str:
     """Download video from URL"""

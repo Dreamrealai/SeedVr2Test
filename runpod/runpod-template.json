@@ -1,0 +1,32 @@
+{
+  "name": "SeedVR2-7B Video Restoration",
+  "imageName": "dreamrealai/seedvr2-handler:latest",
+  "dockerArgs": "",
+  "containerDiskInGb": 50,
+  "volumeInGb": 100,
+  "volumeMountPath": "/models",
+  "env": [
+    {
+      "key": "MODEL_PATH",
+      "value": "/models/seedvr2-7b"
+    },
+    {
+      "key": "PYTHONPATH",
+      "value": "/app/SeedVR:$PYTHONPATH"
+    },
+    {
+      "key": "CUDA_VISIBLE_DEVICES",
+      "value": "0"
+    }
+  ],
+  "gpuTypeId": "NVIDIA H100 PCIe",
+  "cloudType": "SECURE",
+  "minWorkers": 0,
+  "maxWorkers": 2,
+  "defaultWorkers": 0,
+  "maxRequestConcurrency": 1,
+  "scalerType": "QUEUE_DELAY",
+  "scalerValue": 5,
+  "workerInactiveTimeout": 60,
+  "templateVersion": 1
+}

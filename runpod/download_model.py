@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Download SeedVR2-3B model from Hugging Face
+Download SeedVR2-7B model from Hugging Face
 """
 
 import os
 from huggingface_hub import snapshot_download
 
 def download_seedvr2_model():
-    """Download SeedVR2-3B model weights"""
+    """Download SeedVR2-7B model weights"""
     
-    save_dir = "/models/seedvr2-3b"
-    repo_id = "ByteDance-Seed/SeedVR2-3B"
+    save_dir = "/models/seedvr2-7b"
+    repo_id = "ByteDance-Seed/SeedVR2-7B"
     cache_dir = save_dir + "/cache"
     
     print(f"Downloading {repo_id} to {save_dir}")

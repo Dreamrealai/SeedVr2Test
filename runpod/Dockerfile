@@ -54,7 +54,7 @@ RUN wget https://github.com/NVIDIA/apex/releases/download/23.08/apex-23.08-cp310
 RUN pip install runpod
 
 # Create models directory
-RUN mkdir -p /models/seedvr2-3b
+RUN mkdir -p /models/seedvr2-7b
 
 # Copy download script
 COPY download_model.py /app/download_model.py
@@ -68,7 +68,7 @@ COPY handler.py /app/handler.py
 # Set environment variables
 ENV CUDA_VISIBLE_DEVICES=0
 ENV PYTHONPATH=/app/SeedVR:$PYTHONPATH
-ENV MODEL_PATH=/models/seedvr2-3b
+ENV MODEL_PATH=/models/seedvr2-7b
 
 # Default to running in conda environment
 ENTRYPOINT ["conda", "run", "-n", "seedvr", "python"]
