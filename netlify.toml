@@ -1,9 +1,14 @@
 [build]
-  # This assumes your HTML, CSS, and JS files are in the root of your repository.
-  # If you place them in a subdirectory (e.g., "public" or "dist"),
-  # change this to that directory name.
   publish = "."
 
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type"
+
+# SPA redirect
 [[redirects]]
   from = "/*"
   to = "/index.html"

@@ -1,75 +1,77 @@
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+FROM nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04
+
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     python3.10 \
+    python3.10-dev \
     python3-pip \
     git \
     wget \
+    curl \
     ffmpeg \
     libsm6 \
     libxext6 \
     libxrender-dev \
     libgomp1 \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Set python3.10 as default python
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
-# Install Miniconda
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
-    bash miniconda.sh -b -p /opt/conda && \
-    rm miniconda.sh
-
-ENV PATH="/opt/conda/bin:${PATH}"
+# Upgrade pip
+RUN pip install --upgrade pip setuptools wheel
 
 # Clone SeedVR repository
-RUN git clone https://github.com/bytedance-seed/SeedVR.git /app/SeedVR
+RUN git clone https://github.com/ByteDance-Seed/SeedVR.git /app/SeedVR
 
-WORKDIR /app/SeedVR
+WORKDIR /app
 
-# Create conda environment
-RUN conda create -n seedvr python=3.10 -y
-
-# Install requirements in conda environment
-SHELL ["conda", "run", "-n", "seedvr", "/bin/bash", "-c"]
-
-# Install PyTorch and basic requirements
-RUN pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu118
-
-# Copy and install requirements
+# Copy requirements first for better caching
 COPY requirements.txt /app/requirements.txt
-RUN pip install -r /app/requirements.txt
 
-# Install flash attention with specific version
-RUN pip install flash_attn==2.5.9.post1 --no-build-isolation
+# Install PyTorch with CUDA 12.1 support
+RUN pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu121
 
-# Install apex from pre-built wheel (specific to CUDA 11.8)
-RUN wget https://github.com/NVIDIA/apex/releases/download/23.08/apex-23.08-cp310-cp310-linux_x86_64.whl && \
-    pip install apex-23.08-cp310-cp310-linux_x86_64.whl && \
-    rm apex-23.08-cp310-cp310-linux_x86_64.whl
+# Install other requirements
+RUN pip install -r requirements.txt
+
+# Install flash attention (skip for now - optional dependency)
+# RUN pip install flash_attn==2.5.9.post1 --no-build-isolation
+
+# Install apex (download pre-built wheel for Python 3.10 and CUDA 12.1)
+RUN wget https://huggingface.co/ByteDance-Seed/SeedVR2-3B/resolve/main/apex-0.1-cp310-cp310-linux_x86_64.whl && \
+    pip install apex-0.1-cp310-cp310-linux_x86_64.whl && \
+    rm apex-0.1-cp310-cp310-linux_x86_64.whl
 
 # Install RunPod
 RUN pip install runpod
 
 # Create models directory
-RUN mkdir -p /models/seedvr2-7b
+RUN mkdir -p /models
 
-# Copy download script
+# Copy handler and download script
+COPY handler.py /app/handler.py
 COPY download_model.py /app/download_model.py
 
-# Download model weights
-RUN conda run -n seedvr python /app/download_model.py
-
-# Copy handler
-COPY handler.py /app/handler.py
+# Download models based on build argument
+ARG MODEL_SIZE=3b
+ENV MODEL_SIZE=${MODEL_SIZE}
+RUN python /app/download_model.py --model-size ${MODEL_SIZE}
 
 # Set environment variables
-ENV CUDA_VISIBLE_DEVICES=0
 ENV PYTHONPATH=/app/SeedVR:$PYTHONPATH
-ENV MODEL_PATH=/models/seedvr2-7b
+ENV MODEL_PATH=/models/seedvr2-${MODEL_SIZE}
+ENV TOKENIZERS_PARALLELISM=false
 
-# Default to running in conda environment
-ENTRYPOINT ["conda", "run", "-n", "seedvr", "python"]
-CMD ["/app/handler.py"]
+# Create a startup script to handle environment variables
+RUN echo '#!/bin/bash\nif [ ! -z "$GCS_KEY_JSON" ]; then\n    echo "GCS credentials provided via environment variable"\nfi\npython /app/handler.py' > /app/start.sh && \
+    chmod +x /app/start.sh
+
+# Default command
+CMD ["/app/start.sh"]

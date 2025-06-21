@@ -1,13 +1,11 @@
 # Core dependencies
-torch==2.3.0
-torchvision==0.18.0
-torchaudio==2.3.0
+# torch, torchvision, torchaudio installed in Dockerfile
 numpy<2
 opencv-python
 imageio
 imageio-ffmpeg
 av
-decord
+# decord - skip for now, not available for aarch64
 einops
 tensorboard
 tqdm
@@ -23,7 +21,7 @@ moviepy
 oss2
 
 # SeedVR specific dependencies
-flash_attn==2.5.9.post1
+# flash_attn installed separately in Dockerfile
 # apex installed separately in Dockerfile
 
 # RunPod
@@ -34,3 +32,7 @@ boto3  # For S3 uploads
 requests
 Pillow
 scipy
+
+# Google Cloud Storage
+google-cloud-storage==2.14.0
+google-auth==2.27.0

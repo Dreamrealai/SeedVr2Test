@@ -3,25 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Upscaler</title>
+    <title>SeedVR2 Video Upscaler</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Video Upscaler</h1>
-        <p>Upload a video file to upscale it using our Runpod-powered service.</p>
+        <h1>SeedVR2 Video Upscaler</h1>
+        <p class="subtitle">AI-powered video restoration and upscaling</p>
 
-        <input type="file" id="videoFile" accept="video/*">
-        <button id="uploadButton">Upload and Process</button>
-
-        <div id="status">
-            <p>Status: <span id="statusMessage">Idle</span></p>
+        <!-- Server Status Indicator -->
+        <div class="server-status">
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span class="status-text" id="statusText">Checking server status...</span>
+            </div>
+            <button id="wakeUpButton" class="wake-up-btn" style="display: none;">Wake Up Server</button>
         </div>
 
-        <div id="result" style="display: none;">
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 10L12 5L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 5V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M20 13V19C20 19.5304 19.7893 20.0391 19.4142 20.4142C19.0391 20.7893 18.5304 21 18 21H6C5.46957 21 4.96086 20.7893 4.58579 20.4142C4.21071 20.0391 4 19.5304 4 19V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p class="upload-text">Drag & drop your video here or <span class="browse-text">browse</span></p>
+                <p class="upload-hint">Supported formats: MP4, AVI, MOV, MKV, WebM (Max 500MB)</p>
+                <input type="file" id="videoFile" accept="video/*" hidden>
+            </div>
+            
+            <div class="file-info" id="fileInfo" style="display: none;">
+                <div class="file-details">
+                    <span class="file-name" id="fileName"></span>
+                    <span class="file-size" id="fileSize"></span>
+                </div>
+                <button class="remove-file" id="removeFile">×</button>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="settings-section">
+            <h3>Output Settings</h3>
+            <div class="settings-grid">
+                <div class="setting-group">
+                    <label for="resolution">Resolution</label>
+                    <select id="resolution" class="setting-input">
+                        <option value="720x1280">720p (1280×720)</option>
+                        <option value="1080x1920">1080p (1920×1080)</option>
+                        <option value="1440x2560">2K (2560×1440)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="seed">Seed (optional)</label>
+                    <input type="number" id="seed" class="setting-input" placeholder="Random" min="0" max="2147483647">
+                </div>
+            </div>
+        </div>
+
+        <!-- Process Button -->
+        <button id="uploadButton" class="process-btn" disabled>
+            <span class="btn-text">Upload and Process</span>
+            <div class="loading-spinner" id="loadingSpinner" style="display: none;"></div>
+        </button>
+
+        <!-- Progress Section -->
+        <div id="progressSection" class="progress-section" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-text" id="progressText">Uploading...</p>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessages" class="status-messages"></div>
+
+        <!-- Result Section -->
+        <div id="result" class="result-section" style="display: none;">
             <h2>Processed Video</h2>
-            <a id="downloadLink" href="#" download="upscaled_video.mp4">Download Upscaled Video</a>
-            <video id="videoPlayer" controls width="640" style="display: none;"></video>
+            <div class="result-actions">
+                <button id="downloadBrowser" class="download-btn primary">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Download from Browser
+                </button>
+                <button id="downloadGCS" class="download-btn secondary">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 16L12 12M12 12L8 16M12 12V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 4.5C6.5 4.5 4.5 6.5 4.5 9C2.5 9 1 10.5 1 12.5C1 14.5 2.5 16 4.5 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 4.5C17.5 4.5 19.5 6.5 19.5 9C21.5 9 23 10.5 23 12.5C23 14.5 21.5 16 19.5 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Download from Cloud Storage
+                </button>
+            </div>
+            <div class="video-preview">
+                <video id="videoPlayer" controls></video>
+            </div>
         </div>
     </div>
 
