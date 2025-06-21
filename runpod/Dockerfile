@@ -1,61 +1,75 @@
-FROM nvidia/cuda:12.1.0-devel-ubuntu22.04
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV CUDA_HOME=/usr/local/cuda
-ENV PATH=${CUDA_HOME}/bin:${PATH}
-ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     python3.10 \
-    python3.10-dev \
     python3-pip \
     git \
     wget \
     ffmpeg \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set Python 3.10 as default
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+# Set python3.10 as default python
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
-# Upgrade pip
-RUN python -m pip install --upgrade pip
+# Install Miniconda
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
+    bash miniconda.sh -b -p /opt/conda && \
+    rm miniconda.sh
 
-# Install PyTorch with CUDA support
-RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+ENV PATH="/opt/conda/bin:${PATH}"
 
-# Install flash-attn (requires CUDA)
-RUN pip install ninja
-RUN pip install flash-attn --no-build-isolation
+# Clone SeedVR repository
+RUN git clone https://github.com/bytedance-seed/SeedVR.git /app/SeedVR
 
-# Install apex
-RUN git clone https://github.com/NVIDIA/apex
-RUN cd apex && pip install -v --disable-pip-version-check --no-cache-dir --no-build-isolation --config-settings "--build-option=--cpp_ext" --config-settings "--build-option=--cuda_ext" ./
+WORKDIR /app/SeedVR
 
-# Install other dependencies
+# Create conda environment
+RUN conda create -n seedvr python=3.10 -y
+
+# Install requirements in conda environment
+SHELL ["conda", "run", "-n", "seedvr", "/bin/bash", "-c"]
+
+# Install PyTorch and basic requirements
+RUN pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu118
+
+# Copy and install requirements
 COPY requirements.txt /app/requirements.txt
 RUN pip install -r /app/requirements.txt
+
+# Install flash attention with specific version
+RUN pip install flash_attn==2.5.9.post1 --no-build-isolation
+
+# Install apex from pre-built wheel (specific to CUDA 11.8)
+RUN wget https://github.com/NVIDIA/apex/releases/download/23.08/apex-23.08-cp310-cp310-linux_x86_64.whl && \
+    pip install apex-23.08-cp310-cp310-linux_x86_64.whl && \
+    rm apex-23.08-cp310-cp310-linux_x86_64.whl
 
 # Install RunPod
 RUN pip install runpod
 
-# Copy model download script
+# Create models directory
+RUN mkdir -p /models/seedvr2-3b
+
+# Copy download script
 COPY download_model.py /app/download_model.py
 
-# Download SeedVR2-7B model
-RUN python /app/download_model.py
-
-# Copy inference script from SeedVR2 repo
-RUN git clone https://github.com/ByteDance-Seed/SeedVR.git /seedvr
-RUN cp /seedvr/projects/inference_seedvr2_*.py /app/
+# Download model weights
+RUN conda run -n seedvr python /app/download_model.py
 
 # Copy handler
 COPY handler.py /app/handler.py
 
-# Set working directory
-WORKDIR /app
+# Set environment variables
+ENV CUDA_VISIBLE_DEVICES=0
+ENV PYTHONPATH=/app/SeedVR:$PYTHONPATH
+ENV MODEL_PATH=/models/seedvr2-3b
 
-# Run handler
-CMD ["python", "-m", "runpod.serverless.start", "handler.py"]
+# Default to running in conda environment
+ENTRYPOINT ["conda", "run", "-n", "seedvr", "python"]
+CMD ["/app/handler.py"]

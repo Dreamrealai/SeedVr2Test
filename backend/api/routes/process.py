@@ -106,17 +106,18 @@ async def cancel_job(job_id: str):
 async def estimate_cost(resolution: str = "720p") -> dict:
     """Estimate processing cost"""
     
-    # GPU requirements by resolution
+    # GPU requirements by resolution (H100-80G)
+    # Based on official SeedVR2 documentation
     gpu_config = {
-        "720p": {"gpus": 1, "avg_minutes": 7},
-        "1080p": {"gpus": 4, "avg_minutes": 10},
-        "2k": {"gpus": 4, "avg_minutes": 15}
+        "720p": {"gpus": 1, "avg_minutes": 7},   # 1x H100-80G
+        "1080p": {"gpus": 4, "avg_minutes": 10}, # 4x H100-80G with sp_size=4
+        "2k": {"gpus": 4, "avg_minutes": 15}     # 4x H100-80G with sp_size=4
     }
     
     config = gpu_config.get(resolution, gpu_config["720p"])
     
-    # Calculate cost
-    gpu_cost_per_hour = 3.89
+    # Calculate cost (H100-80G on RunPod)
+    gpu_cost_per_hour = 3.50  # Updated H100-80G pricing
     hours = config["avg_minutes"] / 60
     cost = config["gpus"] * gpu_cost_per_hour * hours
     

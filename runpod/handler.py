@@ -12,8 +12,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Model paths
-MODEL_PATH = "/models/seedvr2-7b"
-INFERENCE_SCRIPT = "/app/inference_seedvr2_7b.py"
+MODEL_PATH = "/models/seedvr2-3b"
+INFERENCE_SCRIPT = "/app/SeedVR/projects/inference_seedvr2_3b.py"
 
 def download_video(url: str, output_path: str) -> str:
     """Download video from URL"""
@@ -45,21 +45,39 @@ def upload_to_s3(file_path: str) -> str:
     
     return f"https://placeholder.com/result/{Path(file_path).name}"
 
+def validate_dimensions(height: int, width: int) -> tuple[int, int]:
+    """Ensure dimensions are multiples of 32"""
+    height = (height // 32) * 32
+    width = (width // 32) * 32
+    return height, width
+
 def run_seedvr2(input_video: str, output_dir: str, params: Dict[str, Any]) -> str:
     """Run SeedVR2 inference"""
     logger.info(f"Running SeedVR2 with params: {params}")
     
+    # Validate and adjust dimensions
+    res_h, res_w = validate_dimensions(
+        params.get('res_h', 720),
+        params.get('res_w', 1280)
+    )
+    
+    # Determine GPU count based on resolution
+    if res_h > 720 or res_w > 1280:
+        sp_size = 4  # Use 4 GPUs for 1080p and 2K
+    else:
+        sp_size = 1  # Use 1 GPU for 720p and below
+    
     # Prepare command
     cmd = [
         "torchrun",
-        f"--nproc-per-node={params.get('sp_size', 1)}",
+        f"--nproc-per-node={sp_size}",
         INFERENCE_SCRIPT,
         "--video_path", input_video,
         "--output_dir", output_dir,
         "--seed", str(params.get('seed', 42)),
-        "--res_h", str(params.get('res_h', 720)),
-        "--res_w", str(params.get('res_w', 1280)),
-        "--sp_size", str(params.get('sp_size', 1))
+        "--res_h", str(res_h),
+        "--res_w", str(res_w),
+        "--sp_size", str(sp_size)
     ]
     
     # Run inference

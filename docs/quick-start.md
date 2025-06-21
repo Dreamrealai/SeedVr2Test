@@ -95,7 +95,7 @@ This project provides a web-based GUI for running SeedVR2 (7B model) video resto
                            │                     │
                            ▼                     ▼
                     ┌─────────────┐     ┌─────────────┐
-                    │   Storage   │     │  SeedVR2-7B │
+                    │   Storage   │     │  SeedVR2-3B │
                     │   (S3/R2)   │     │    Model    │
                     └─────────────┘     └─────────────┘
 ```

@@ -1,11 +1,11 @@
 # SeedVR2 RunPod GUI
 
-A web-based interface for running SeedVR2 video restoration on RunPod with one-click functionality.
+A web-based interface for running SeedVR2-3B video restoration on RunPod with one-click functionality.
 
 ## Features
 
 - 🎥 Easy video upload with drag-and-drop
-- ⚡ One-click video restoration using SeedVR2 7B model
+- ⚡ One-click video restoration using SeedVR2-3B model
 - 🖥️ RunPod integration for GPU processing
 - 📊 Real-time processing status
 - 🎛️ Adjustable parameters (resolution, seed)
@@ -16,7 +16,7 @@ A web-based interface for running SeedVR2 video restoration on RunPod with one-c
 - **Frontend**: React + TypeScript
 - **Backend**: FastAPI + Python
 - **Processing**: RunPod Serverless (H100 GPUs)
-- **Model**: ByteDance-Seed/SeedVR2-7B
+- **Model**: ByteDance-Seed/SeedVR2-3B
 
 ## Quick Start
 
@@ -94,11 +94,23 @@ See [docs/deployment.md](docs/deployment.md) for detailed deployment instruction
 
 See [docs/api.md](docs/api.md) for API endpoint documentation.
 
-## Cost Estimation
+## GPU Requirements & Cost Estimation
 
-- H100-80G GPU: ~$3.89/hour
-- Average processing time: 5-10 minutes
-- Estimated cost per video: $0.32-$0.65
+### GPU Requirements
+- **720p and below**: 1x H100-80G GPU
+- **1080p and 2K**: 4x H100-80G GPUs (with sp_size=4)
+
+### Cost Estimates (H100-80G on RunPod)
+- H100-80G GPU: ~$3.50/hour
+- **720p**: ~$0.40-$0.70 per video (1 GPU, 5-10 min)
+- **1080p**: ~$2.30-$3.50 per video (4 GPUs, 8-12 min)  
+- **2K**: ~$3.50-$5.25 per video (4 GPUs, 12-18 min)
+
+### Known Limitations
+- Input dimensions must be multiples of 32
+- Not robust to heavily degraded videos
+- May fail with very large motions
+- Can over-sharpen lightly degraded inputs
 
 ## License
 
