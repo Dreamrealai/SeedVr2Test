@@ -6,11 +6,10 @@
 3. Click "Connect" → "Connect to Jupyter Lab" or "Web Terminal"
 
 ## Step 2: Copy & Paste ONE Command (5 minutes)
-Copy this ENTIRE block and paste it in the terminal:
+Copy this ENTIRE line and paste it in the terminal:
 
 ```bash
-cd /workspace && \
-curl -sSL https://raw.githubusercontent.com/Dreamrealai/SeedVr2Test/main/runpod/easy_install.sh | bash
+cd /workspace && curl -sSL https://raw.githubusercontent.com/Dreamrealai/SeedVr2Test/main/runpod/easy_install.sh | bash
 ```
 
 **That's it!** The script will:
