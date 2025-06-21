@@ -1,0 +1,84 @@
+# RunPod Setup Commands for SeedVR2-7B
+# Copy and paste these commands into your RunPod terminal
+
+# 1. Update system and install dependencies
+apt-get update && apt-get install -y git wget ffmpeg libsm6 libxext6 libxrender-dev libgomp1
+
+# 2. Install Miniconda
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
+bash /tmp/miniconda.sh -b -p /opt/conda
+rm /tmp/miniconda.sh
+export PATH="/opt/conda/bin:${PATH}"
+
+# 3. Clone SeedVR repository
+git clone https://github.com/bytedance-seed/SeedVR.git /app/SeedVR
+cd /app/SeedVR
+
+# 4. Create conda environment
+conda create -n seedvr python=3.10 -y
+source /opt/conda/etc/profile.d/conda.sh
+conda activate seedvr
+
+# 5. Install PyTorch
+pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu118
+
+# 6. Install requirements
+pip install numpy'<2' opencv-python imageio imageio-ffmpeg av decord einops tensorboard tqdm omegaconf transformers diffusers accelerate xformers ftfy gradio soundfile moviepy oss2 huggingface_hub
+
+# 7. Install flash attention
+pip install flash_attn==2.5.9.post1 --no-build-isolation
+
+# 8. Download SeedVR2-7B model (this will take ~15-20 minutes)
+python -c "
+from huggingface_hub import snapshot_download
+import os
+save_dir = '/models/seedvr2-7b'
+repo_id = 'ByteDance-Seed/SeedVR2-7B'
+print(f'Downloading {repo_id} to {save_dir}')
+os.makedirs(save_dir, exist_ok=True)
+snapshot_download(
+    cache_dir=save_dir + '/cache',
+    local_dir=save_dir,
+    repo_id=repo_id,
+    local_dir_use_symlinks=False,
+    resume_download=True,
+    allow_patterns=['*.json', '*.safetensors', '*.pth', '*.bin', '*.py', '*.md', '*.txt']
+)
+print('Model downloaded successfully!')
+"
+
+# 9. Test the setup
+python -c "
+import torch
+print('PyTorch:', torch.__version__)
+print('CUDA available:', torch.cuda.is_available())
+if torch.cuda.is_available():
+    print('CUDA device:', torch.cuda.get_device_name(0))
+import os
+if os.path.exists('/models/seedvr2-7b'):
+    print('✅ Model directory exists')
+    files = os.listdir('/models/seedvr2-7b')
+    print(f'   Found {len(files)} files')
+else:
+    print('❌ Model directory not found')
+"
+
+# 10. Test inference with a sample video
+wget https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4 -O /tmp/test.mp4
+mkdir -p /tmp/output
+
+# Activate environment if not already active
+source /opt/conda/etc/profile.d/conda.sh
+conda activate seedvr
+
+# Run inference
+cd /app/SeedVR
+torchrun --nproc-per-node=1 projects/inference_seedvr2_7b.py \
+  --video_path /tmp/test.mp4 \
+  --output_dir /tmp/output \
+  --seed 42 \
+  --res_h 720 \
+  --res_w 1280 \
+  --sp_size 1
+
+echo "✅ Setup complete! Check /tmp/output for the restored video."
