@@ -1,5 +1,5 @@
 // SeedVR2 Web Interface
-const API_BASE_URL = 'https://seedvr2-backend-wdv5a7bxfa-uc.a.run.app'; // Will update after deployment
+const API_BASE_URL = '/.netlify/functions/api'; // Using Netlify Functions
 const RUNPOD_API_KEY = 'rpa_UFDTAAMZ19E9WYJNTIPAMY4UG6DHWYZCO12RO6EUsi2hmd';
 const RUNPOD_ENDPOINT = 'https://api.runpod.ai/v2/lh0wm9g482zr28';
 
@@ -222,33 +222,28 @@ async function uploadVideo(file, resH, resW, seed) {
     formData.append('res_w', resW);
     formData.append('seed', seed);
     
-    // Track upload progress
-    const xhr = new XMLHttpRequest();
-    
-    return new Promise((resolve, reject) => {
-        xhr.upload.addEventListener('progress', (e) => {
-            if (e.lengthComputable) {
-                const percentComplete = (e.loaded / e.total) * 20; // 0-20% for upload
-                updateProgress(percentComplete, 'Uploading video...');
-            }
+    // For now, use the mock API endpoint
+    // In production, this would upload to the real backend
+    try {
+        const response = await fetch(`${API_BASE_URL}/upload`, {
+            method: 'POST',
+            body: formData
         });
         
-        xhr.addEventListener('load', () => {
-            if (xhr.status === 200) {
-                const response = JSON.parse(xhr.responseText);
-                resolve(response);
-            } else {
-                reject(new Error(`Upload failed: ${xhr.statusText}`));
-            }
-        });
+        if (!response.ok) {
+            throw new Error(`Upload failed: ${response.statusText}`);
+        }
         
-        xhr.addEventListener('error', () => {
-            reject(new Error('Upload failed'));
-        });
+        const data = await response.json();
         
-        xhr.open('POST', `${API_BASE_URL}/upload`);
-        xhr.send(formData);
-    });
+        // For demo, also show a message
+        showMessage('Demo mode: Using sample video for processing', 'info');
+        
+        return data;
+    } catch (error) {
+        console.error('Upload error:', error);
+        throw error;
+    }
 }
 
 async function pollJobStatus(jobId) {

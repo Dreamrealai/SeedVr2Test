@@ -141,11 +141,11 @@ h1 {
     }
 }
 
-.status-dot.healthy {
+.status-dot.online {
     background: var(--success-color);
 }
 
-.status-dot.unhealthy {
+.status-dot.offline {
     background: var(--warning-color);
 }
 
@@ -504,6 +504,11 @@ h1 {
 .status-message.warning {
     border-color: var(--warning-color);
     background: rgba(245, 158, 11, 0.1);
+}
+
+.status-message.info {
+    border-color: var(--primary-color);
+    background: rgba(91, 76, 255, 0.1);
 }
 
 /* Result Section */

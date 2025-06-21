@@ -1,0 +1,17 @@
+{
+  "name": "seedvr2-test",
+  "version": "1.0.0",
+  "description": "SeedVR2 Video Upscaling Web Interface",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.7.0",
+    "busboy": "^1.6.0",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {},
+  "keywords": ["seedvr2", "video", "upscaling"],
+  "author": "",
+  "license": "MIT"
+}
