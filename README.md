@@ -2,6 +2,14 @@
 
 A web-based interface for running SeedVR2-7B video restoration on RunPod with one-click functionality.
 
+## 🚀 One-Click RunPod Setup
+
+If you have a RunPod pod running, just paste this command in the terminal:
+
+```bash
+wget -qO- https://raw.githubusercontent.com/dreamrealai/SeedVr2Test/main/scripts/setup-runpod-pod.sh | bash
+```
+
 ## Features
 
 - 🎥 Easy video upload with drag-and-drop
@@ -30,8 +38,8 @@ A web-based interface for running SeedVR2-7B video restoration on RunPod with on
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/dreamrealai/seedvr2-runpod-gui.git
-cd seedvr2-runpod-gui
+git clone https://github.com/dreamrealai/SeedVr2Test.git
+cd SeedVr2Test
 ```
 
 2. Set up environment variables:
