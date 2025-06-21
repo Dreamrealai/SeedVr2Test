@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeedVR2 Video Restoration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2a5298;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #2a5298;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+        
+        .upload-area:hover, .upload-area.drag-over {
+            background: #e3f2fd;
+            border-color: #1976d2;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #2a5298;
+            margin-bottom: 10px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .settings {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        select, input[type="number"] {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #2a5298;
+        }
+        
+        .btn {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .btn:hover:not(:disabled) {
+            background: #1976d2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        .status.processing {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #2a5298;
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .download-btn {
+            background: #28a745;
+            margin-top: 10px;
+        }
+        
+        .download-btn:hover {
+            background: #218838;
+        }
+        
+        .file-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e8f4f8;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .api-url-input {
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 SeedVR2 Video Restoration</h1>
+        <p class="subtitle">AI-powered video enhancement using ByteDance's SeedVR2-7B model</p>
+        
+        <input type="text" 
+               class="api-url-input" 
+               id="apiUrl" 
+               placeholder="API Server URL (e.g., http://localhost:8000)"
+               value="http://localhost:8000">
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📹</div>
+            <p><strong>Click to upload or drag & drop</strong></p>
+            <p style="margin-top: 5px; color: #888;">Supported: MP4, AVI, MOV, MKV (Max 2GB)</p>
+            <input type="file" id="fileInput" class="file-input" accept=".mp4,.avi,.mov,.mkv">
+        </div>
+        
+        <div class="file-info" id="fileInfo"></div>
+        
+        <div class="settings">
+            <div class="setting-group">
+                <label for="resolution">Output Resolution</label>
+                <select id="resolution">
+                    <option value="720">720p (1280×720)</option>
+                    <option value="1080">1080p (1920×1080)</option>
+                    <option value="1440">2K (2560×1440)</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="seed">Random Seed</label>
+                <input type="number" id="seed" value="42" min="0" max="999999">
+            </div>
+        </div>
+        
+        <button class="btn" id="restoreBtn" disabled>Start Restoration</button>
+        
+        <div class="status" id="status"></div>
+        
+        <button class="btn download-btn" id="downloadBtn" style="display: none;">Download Restored Video</button>
+    </div>
+    
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const restoreBtn = document.getElementById('restoreBtn');
+        const status = document.getElementById('status');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const apiUrlInput = document.getElementById('apiUrl');
+        
+        let selectedFile = null;
+        let currentJobId = null;
+        let pollInterval = null;
+        
+        // Get API URL
+        function getApiUrl() {
+            return apiUrlInput.value.trim().replace(/\/$/, '');
+        }
+        
+        // File upload handlers
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            handleFile(e.dataTransfer.files[0]);
+        });
+        
+        function handleFile(file) {
+            if (!file) return;
+            
+            const validTypes = ['video/mp4', 'video/avi', 'video/quicktime', 'video/x-matroska'];
+            const validExtensions = ['.mp4', '.avi', '.mov', '.mkv'];
+            
+            const hasValidExtension = validExtensions.some(ext => 
+                file.name.toLowerCase().endsWith(ext)
+            );
+            
+            if (!validTypes.includes(file.type) && !hasValidExtension) {
+                alert('Please upload a valid video file (MP4, AVI, MOV, or MKV)');
+                return;
+            }
+            
+            if (file.size > 2 * 1024 * 1024 * 1024) {
+                alert('File size must be less than 2GB');
+                return;
+            }
+            
+            selectedFile = file;
+            fileInfo.style.display = 'block';
+            fileInfo.innerHTML = `
+                <strong>Selected:</strong> ${file.name}<br>
+                <strong>Size:</strong> ${(file.size / (1024 * 1024)).toFixed(2)} MB
+            `;
+            restoreBtn.disabled = false;
+        }
+        
+        // Restore button handler
+        restoreBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+            
+            const resolution = document.getElementById('resolution').value;
+            const seed = document.getElementById('seed').value;
+            
+            // Determine dimensions based on resolution
+            let res_h, res_w;
+            switch(resolution) {
+                case '1080':
+                    res_h = 1080; res_w = 1920;
+                    break;
+                case '1440':
+                    res_h = 1440; res_w = 2560;
+                    break;
+                default:
+                    res_h = 720; res_w = 1280;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('res_h', res_h);
+            formData.append('res_w', res_w);
+            formData.append('seed', seed);
+            
+            restoreBtn.disabled = true;
+            showStatus('processing', 'Uploading video and starting restoration...');
+            
+            try {
+                const response = await fetch(`${getApiUrl()}/api/restore`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to start restoration');
+                }
+                
+                const data = await response.json();
+                currentJobId = data.job_id;
+                
+                showStatus('processing', 'Video restoration in progress...');
+                startPolling();
+                
+            } catch (error) {
+                showStatus('error', `Error: ${error.message}`);
+                restoreBtn.disabled = false;
+            }
+        });
+        
+        function startPolling() {
+            pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${getApiUrl()}/api/status/${currentJobId}`);
+                    const job = await response.json();
+                    
+                    if (job.status === 'completed') {
+                        clearInterval(pollInterval);
+                        showStatus('completed', '✅ Video restoration completed!');
+                        downloadBtn.style.display = 'block';
+                        restoreBtn.disabled = false;
+                    } else if (job.status === 'failed') {
+                        clearInterval(pollInterval);
+                        showStatus('error', `❌ Restoration failed: ${job.error || 'Unknown error'}`);
+                        restoreBtn.disabled = false;
+                    } else {
+                        // Still processing
+                        const elapsed = Math.floor((Date.now() - new Date(job.created_at)) / 1000);
+                        showStatus('processing', `Processing... (${elapsed}s elapsed)`);
+                    }
+                } catch (error) {
+                    clearInterval(pollInterval);
+                    showStatus('error', `Connection error: ${error.message}`);
+                    restoreBtn.disabled = false;
+                }
+            }, 2000);
+        }
+        
+        function showStatus(type, message) {
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            if (type === 'processing') {
+                status.innerHTML = `
+                    ${message}
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                `;
+            } else {
+                status.innerHTML = message;
+            }
+        }
+        
+        downloadBtn.addEventListener('click', () => {
+            if (!currentJobId) return;
+            window.open(`${getApiUrl()}/api/download/${currentJobId}`, '_blank');
+        });
+        
+        // Check API connection on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${getApiUrl()}/`);
+                const data = await response.json();
+                console.log('API Server:', data);
+            } catch (error) {
+                console.warn('API server not reachable at', getApiUrl());
+                showStatus('error', 'API server not reachable. Please check the URL and ensure the server is running.');
+            }
+        });
+    </script>
+</body>
+</html>
