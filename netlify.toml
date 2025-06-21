@@ -1,0 +1,10 @@
+[build]
+  # This assumes your HTML, CSS, and JS files are in the root of your repository.
+  # If you place them in a subdirectory (e.g., "public" or "dist"),
+  # change this to that directory name.
+  publish = "."
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
