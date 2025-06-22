@@ -1,5 +1,5 @@
 // SeedVR2 Web Interface
-const API_BASE_URL = 'https://ussvh21624ql0g-8080.proxy.runpod.net'; // Using RunPod Backend
+const API_BASE_URL = 'https://ussvh2i624ql0g-8080.proxy.runpod.net'; // Using RunPod Backend
 const RUNPOD_API_KEY = 'rpa_UFDTAAMZ19E9WYJNTIPAMY4UG6DHWYZCO12RO6EUsi2hmd';
 const RUNPOD_ENDPOINT = 'https://api.runpod.ai/v2/lh0wm9g482zr28';
 
